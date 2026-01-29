@@ -1,3 +1,5 @@
+import requests
+from io import BytesIO
 from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -34,10 +36,26 @@ async def operate_image(image_path: str, operation: str, request: Request):
         return resp.blob()
 
 
+
+
+
 #this is just a dummy endpoint, i still need to figure out how to make a copy of the original image after cropping it, also need to rename it, but the main logic is ok.
-@fastapi.get("/crop/{image_path}/{crop_amount}")
-async def crop_image(image_path: str, crop_amount):
-    im = Image.open(image_path)
-    box = (crop_amount[0], crop_amount[1], crop_amount[2], crop_amount[3])
-    cropped_image = im.paste(region, box)
-    cropped_image.save("cropped-image.jpg")
+@fastapi.get("/crop/{image_url}/{crop_amount1}/{crop_amount2}/{crop_amount3}/{crop_amount4}")
+async def crop_image(image_url: str, crop_amount1: int, crop_amount2: int, crop_amount3: int, crop_amount4: int):
+    response = requests.get(image_url)
+    if response.status_code == 200:
+        image_data = BytesIO(response.content)
+        im = Image.open(image_data)
+        box = (crop_amount1, crop_amount2, crop_amount3, crop_amount4)
+        cropped_image = im.paste(region, box)
+        return FileResponse(cropped_image, media_type="image/jpeg")
+
+
+@fastapi.get("/rotate/{image_url}")
+async def rotate_image(image_url: str):
+    response = requests.get(image_url)
+    if response.status_code == 200:
+        image_data = BytesIO(response.content)
+        im = Image.open(image_data)
+        rotated_image = im.rotate(angle=90)
+        return FileResponse(rotated_image, media_type="image/jpeg")
