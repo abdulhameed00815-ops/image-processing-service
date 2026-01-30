@@ -24,7 +24,7 @@ def upload_image(image_path: str):
         return {"message": "file not found bitch!"}
 
 
-@fastapi.get("/operateimage/{operation}/{image_path}")
+@fastapi.get("/operateimage/{operation}/{image_path:path}")
 async def operate_image(image_path: str, operation: str, request: Request):
     async with httpx.AsyncClient() as client:
         resp = await client.request(
@@ -40,8 +40,8 @@ async def operate_image(image_path: str, operation: str, request: Request):
 
 
 #this is just a dummy endpoint, i still need to figure out how to make a copy of the original image after cropping it, also need to rename it, but the main logic is ok.
-@fastapi.get("/crop/{image_url}/{crop_amount1}/{crop_amount2}/{crop_amount3}/{crop_amount4}")
-async def crop_image(image_url: str, crop_amount1: int, crop_amount2: int, crop_amount3: int, crop_amount4: int):
+@fastapi.post("/crop/{crop_amount1}/{crop_amount2}/{crop_amount3}/{crop_amount4}")
+async def crop_image(crop_amount1: int, crop_amount2: int, crop_amount3: int, crop_amount4: int, image: UploadFile = File(...)):
     response = requests.get(image_url)
     if response.status_code == 200:
         image_data = BytesIO(response.content)
@@ -51,7 +51,7 @@ async def crop_image(image_url: str, crop_amount1: int, crop_amount2: int, crop_
         return FileResponse(cropped_image, media_type="image/jpeg")
 
 
-@fastapi.get("/rotate/{image_url}")
+@fastapi.get("/rotate/{image_url:path}")
 async def rotate_image(image_url: str):
     response = requests.get(image_url)
     if response.status_code == 200:
