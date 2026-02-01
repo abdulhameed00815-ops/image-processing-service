@@ -47,7 +47,7 @@ const cropAmountForm = document.getElementById("crop-amount-form");
 
 cropAmountForm.addEventListener("submit", async function cropImage (e) {
 	e.preventDefault()
-	const file = await blobUrlToFile(imageUrl, "image.png");
+	const file = await blobUrlToFile(imageUrl, "image.jpg");
 	//we create a form data to let the browser send the file safely thro http
 	const formData = new FormData();
 	formData.append("image", file)
