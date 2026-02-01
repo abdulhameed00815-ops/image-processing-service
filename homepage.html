@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html>
 	<head>
-
+		<link rel="stylesheet" href="elements.css?v=3">
 	</head>
 	<body>
-		<div>
+		<div id="image-path-form-container">
 			<form id="image-path-form">
 				<div>
 					<input type="text" id="image-path" placeholder="Enter image path">
 				</div>
 				<input type="submit" id="image-path-submit-button" value="Submit path">
 			</form>
-			<div id="submitted-image-div">
+		</div>
+		<div>
+			<div id="submitted-image-div" class="image-container">
 			</div>
 		</div>
 		<div>
-			<button id="direct-to-crop-button">Crop</button>
+			<button id="direct-to-crop-button">crop page</button>
+		</div>
+		<div>
+			<button id="direct-to-rotate-button">rotate page</button>
+		</div>
+		<div>
+			<button id="download-button">Download</button>
 		</div>
 	</body>
 	<script src="homepage.js?v=3"></script>
