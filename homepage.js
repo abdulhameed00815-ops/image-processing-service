@@ -1,6 +1,22 @@
 const imagePathForm = document.getElementById("image-path-form")
 const submittedImageDiv = document.getElementById("submitted-image-div")
 
+
+function downloadImageFromBlob(blobUrl, filename) {
+        const link = document.createElement('a');
+
+        link.href = blobUrl;
+
+        link.download = filename;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+}
+
+
 function checkIfImageExists() {
 	const imageUrl = sessionStorage.getItem("image_url")
 	if (imageUrl !== null) {
@@ -34,9 +50,26 @@ window.onload = checkIfImageExists();
 
 
 
-const directToCropButton = document.getElementById("direct-to-crop-button")
+const directToCropButton = document.getElementById("direct-to-crop-button");
 
 
 directToCropButton.addEventListener("click", function directToCropPage() {
-	window.location.assign("http://localhost:5500/crop.html")
-})
+	window.location.assign("http://localhost:5500/crop.html");
+});
+
+
+const directToRotateButton = document.getElementById("direct-to-rotate-button");
+
+
+directToRotateButton.addEventListener("click", function() {
+	window.location.assign("http://localhost:5500/rotate.html");
+});
+
+
+const downloadButton = document.getElementById("download-button");
+downloadButton.addEventListener("click", function() {
+	const imageUrl = sessionStorage.getItem("image_url");
+	downloadImageFromBlob(imageUrl, "image.jpg");
+});
+
+
