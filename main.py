@@ -51,11 +51,12 @@ async def crop_image(crop_amount1: int, crop_amount2: int, crop_amount3: int, cr
     return Response(content=buf.read(), media_type="image/jpeg")
 
 
-@fastapi.get("/rotate/{image_url:path}")
-async def rotate_image(image_url: str):
-    response = requests.get(image_url)
-    if response.status_code == 200:
-        image_data = BytesIO(response.content)
-        im = Image.open(image_data)
-        rotated_image = im.rotate(angle=90)
-        return FileResponse(rotated_image, media_type="image/jpeg")
+@fastapi.post("/rotate")
+async def rotate_image(image: UploadFile = File(...)):
+    im = Image.open(image.file)
+    #the expand="True" thing is for rotating images with height != width.
+    rotated_image = im.rotate(angle=90, expand=True)
+    buf =io.BytesIO()
+    rotated_image.save(buf, format="JPEG")
+    buf.seek(0)
+    return Response(content=buf.read(), media_type="image/jpeg")
