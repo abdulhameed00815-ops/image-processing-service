@@ -1,0 +1,32 @@
+body {
+	background-color:black;
+}
+
+.image-container img {
+	margin:10px;
+	max-width:500px;
+	width:100%;
+	border:2px white solid;
+}
+
+.image-container {
+	display:flex;
+	justify-content:center;
+}
+
+#image-path-form-container {
+	display:flex;
+	justify-content:center;
+}
+
+form input {
+	padding:10px;
+	margin:10px;	
+	border:2px grey solid;
+	border-radius:8px;
+}
+
+form {
+	display:flex;
+	justify-content:center;
+}
