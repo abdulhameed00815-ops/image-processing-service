@@ -17,7 +17,9 @@ function downloadImageFromBlob(blobUrl, filename) {
 }
 
 
-function checkIfImageExists() {
+
+
+function checkIfImageExistsFromSession() {
 	const imageUrl = sessionStorage.getItem("image_url")
 	if (imageUrl !== null) {
 		const imageUrl = sessionStorage.getItem("image_url");
@@ -26,26 +28,72 @@ function checkIfImageExists() {
 
 		submittedImageDiv.innerHTML = "";
 		submittedImageDiv.appendChild(img);
-	} else {
-		imagePathForm.addEventListener("submit", async function submitimage(e) {
-			e.preventDefault();
-			const imagePath = document.getElementById("image-path").value;
-			sessionStorage.setItem('image_path', imagePath)
-			const response = await fetch(`http://127.0.0.1:8000/uploadimage/${imagePath}`);
-
-			const imageBlob = await response.blob();
-			const imageUrl = URL.createObjectURL(imageBlob);
-			sessionStorage.setItem('image_url', imageUrl);
-			const img = document.createElement("img");
-			img.src = imageUrl;
-
-			submittedImageDiv.innerHTML = "";
-			submittedImageDiv.appendChild(img);
-		})
-	}
+	} 
 }
 
-window.onload = checkIfImageExists();
+
+function checkIfImageExistsFromDatabase(dbName, storeName) {
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.open(dbName);
+		request.onupgradeneeded = () => {
+			resolve(false);
+		};
+
+		request.onsuccess = (event) => {
+			const db = event.target.result;
+			if (!db.objectStoreNames.contains(storeName)) {
+				db.close()
+				resolve(false);
+				return
+			}
+
+			let transaction = db.transaction("images", "readonly");
+			let store = transaction.objectStore("images");
+			let request = store.get("1");
+
+			request.onsuccess = function(event) {
+				const imageObject = request.result;
+
+			};
+
+			request.onerror = function(event) {
+				reject(event.target.error);
+				db.close();
+			};
+
+		};
+
+		request.onerror = () => reject(request.error);
+	});
+}
+
+
+imagePathForm.addEventListener("submit", async function submitimage(e) {
+	e.preventDefault();
+	const imagePath = document.getElementById("image-path").value;
+	sessionStorage.setItem('image_path', imagePath)
+	const response = await fetch(`http://127.0.0.1:8000/uploadimage/${imagePath}`);
+
+	const imageBlob = await response.blob();
+	const imageUrl = URL.createObjectURL(imageBlob);
+	sessionStorage.setItem('image_url', imageUrl);
+	const img = document.createElement("img");
+	img.src = imageUrl;
+
+	submittedImageDiv.innerHTML = "";
+	submittedImageDiv.appendChild(img);
+
+	let openRequest = indexedDB.open("lastImage", 1)
+
+	openRequest.onupgradeneeded = function() {
+		let db = openRequest.result;
+		if (!db.objectStoreNames.contains("lastImage")) {
+			db.createObjectStore("lastImage", {keyPath: 'id'})
+		}
+	};
+})
+
+
 
 
 
