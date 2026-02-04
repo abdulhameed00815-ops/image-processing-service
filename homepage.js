@@ -17,9 +17,7 @@ function downloadImageFromBlob(blobUrl, filename) {
 }
 
 
-
-
-function checkIfImageExistsFromSession() {
+function checkIfImageExistsFromBlobUrl() {
 	const imageUrl = sessionStorage.getItem("image_url")
 	if (imageUrl !== null) {
 		const imageUrl = sessionStorage.getItem("image_url");
@@ -32,7 +30,7 @@ function checkIfImageExistsFromSession() {
 }
 
 
-function checkIfImageExistsFromDatabase(dbName, storeName) {
+function FetchImageFromDatabase(dbName, storeName) {
 	return new Promise((resolve, reject) => {
 		const request = indexedDB.open(dbName);
 		request.onupgradeneeded = () => {
@@ -47,13 +45,14 @@ function checkIfImageExistsFromDatabase(dbName, storeName) {
 				return
 			}
 
-			let transaction = db.transaction("images", "readonly");
-			let store = transaction.objectStore("images");
+			let transaction = db.transaction(dbName, "readonly");
+			let store = transaction.objectStore(storeName);
 			let request = store.get("1");
 
 			request.onsuccess = function(event) {
 				const imageObject = request.result;
-
+				resolve(imageObject);
+				db.close();
 			};
 
 			request.onerror = function(event) {
@@ -65,6 +64,30 @@ function checkIfImageExistsFromDatabase(dbName, storeName) {
 
 		request.onerror = () => reject(request.error);
 	});
+}
+
+
+window.onload = () => {
+	try {
+		checkIfImageExistsFromBlobUrl();
+	} catch (e) {
+		console.log(`an error occured: ${e}`);
+	};
+
+	try {
+		imageBlob = FetchImageFromDatabase("album", "images");
+		const imageUrl = URL.createObjectURL(imageBlob);
+		sessionStorage.setItem('image_url', imageUrl);
+		const img = document.createElement("img");
+		img.src = imageUrl;
+
+		submittedImageDiv.innerHTML = "";
+		submittedImageDiv.appendChild(img);
+	} catch (e) {
+		console.log(`an error occured: ${e}`);
+	}
+
+	return
 }
 
 
@@ -83,19 +106,35 @@ imagePathForm.addEventListener("submit", async function submitimage(e) {
 	submittedImageDiv.innerHTML = "";
 	submittedImageDiv.appendChild(img);
 
-	let openRequest = indexedDB.open("lastImage", 1)
+	let openRequest = indexedDB.open("album", 1)
 
-	openRequest.onupgradeneeded = function() {
-		let db = openRequest.result;
-		if (!db.objectStoreNames.contains("lastImage")) {
-			db.createObjectStore("lastImage", {keyPath: 'id'})
+	openRequest.onupgradeneeded = (event) => {
+		let db = event.target.result;
+		if (!db.objectStoreNames.contains("images")) {
+			db.createObjectStore("images", {keyPath: "id"});
 		}
 	};
-})
 
+	openRequest.onsuccess = (event) => {
+		let db = event.target.result;
+		let transaction = db.transaction("images", "readwrite");
+		let images = transaction.objectStore("images");
+		let image = {
+			id: "1",
+			image_blob: imageBlob
+		};
+		let request = images.put(image);
 
+		request.onsuccess = () => {
+			console.log("image added to indexedDB", request.result);
+		};
 
+		request.onerror = () => {
+			console.log("error: ", request.error);
+		};
+	};
 
+});
 
 
 const directToCropButton = document.getElementById("direct-to-crop-button");
