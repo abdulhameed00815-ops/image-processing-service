@@ -43,6 +43,13 @@ async def operate_image(image_path: str, operation: str, request: Request):
 @fastapi.post("/crop/{crop_amount1}/{crop_amount2}/{crop_amount3}/{crop_amount4}")
 async def crop_image(crop_amount1: int, crop_amount2: int, crop_amount3: int, crop_amount4: int, image: UploadFile = File(...)):
     im = Image.open(image.file)
+    image_size = im.size
+    image_width = image_size[0] 
+    image_height = image_size[1]
+    if crop_amount1 > image_width | crop_amount3 > image_width:
+        raise HTTPException(status_code=400, detail="too much crop")
+    elif crop_amount2 > image_height | crop_amount4 > image_height:
+        raise HTTPException(status_code=400, detail="too much crop")
     cropped_image = ImageOps.crop(im, border=(crop_amount1, crop_amount2, crop_amount3, crop_amount4))
     #we use the code below to temporarily store the file in the ram (so that we can return it thro http) instead of storing it on the disc.
     buf = io.BytesIO()
