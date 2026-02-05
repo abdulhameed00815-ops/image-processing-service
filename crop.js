@@ -1,13 +1,25 @@
 const submittedImageDiv = document.getElementById("submitted-image-div")
 
 
-window.onload = function loadUploadedImage() {
-	let imageUrl = sessionStorage.getItem("image_url");
-        let img = document.createElement("img");
-        img.src = imageUrl;
+window.onload = async function loadUploadedImage() {
+	try {
+		let imageUrl = sessionStorage.getItem("image_url");
+		let img = document.createElement("img");
+		img.src = imageUrl;
 
-        submittedImageDiv.innerHTML = "";
-        submittedImageDiv.appendChild(img);
+		submittedImageDiv.innerHTML = "";
+		submittedImageDiv.appendChild(img);
+	} catch (error) {
+		imageRecord = await FetchImageFromDatabase("album", "images");
+                if (!imageRecord) return;
+                const imageUrl = URL.createObjectURL(imageRecord.image_blob);
+                sessionStorage.setItem('image_url', imageUrl);
+                const img = document.createElement("img");
+                img.src = imageUrl;
+
+                submittedImageDiv.innerHTML = "";
+                submittedImageDiv.appendChild(img);
+	};
 };
 
 
@@ -74,7 +86,35 @@ cropAmountForm.addEventListener("submit", async function cropImage (e) {
 	for (const key of formData.keys()) {
 		formData.delete(key);
 	}
-	
+
+	let openRequest = indexedDB.open("album", 1)
+
+        openRequest.onupgradeneeded = (event) => {
+                console.log('onupgradeneeded fired bitch')
+                let db = event.target.result;
+                if (!db.objectStoreNames.contains("images")) {
+                        db.createObjectStore("images", {keyPath: "id"});
+                }
+        };
+
+        openRequest.onsuccess = (event) => {
+                let db = event.target.result;
+                let transaction = db.transaction("images", "readwrite");
+                let images = transaction.objectStore("images");
+                let image = {
+                        id: "1",
+                        image_blob: imageBlob
+                };
+                let request = images.put(image);
+
+                request.onsuccess = () => {
+                        console.log("image added to indexedDB", request.result);
+                };
+
+                request.onerror = () => {
+                        console.log("error: ", request.error);
+                };
+        };
 })
 
 
