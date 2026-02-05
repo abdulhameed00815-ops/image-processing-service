@@ -45,7 +45,7 @@ function FetchImageFromDatabase(dbName, storeName) {
 				return
 			}
 
-			let transaction = db.transaction(dbName, "readonly");
+			let transaction = db.transaction(storeName, "readonly");
 			let store = transaction.objectStore(storeName);
 			let request = store.get("1");
 
@@ -67,7 +67,7 @@ function FetchImageFromDatabase(dbName, storeName) {
 }
 
 
-window.onload = () => {
+window.onload = async () => {
 	try {
 		checkIfImageExistsFromBlobUrl();
 	} catch (e) {
@@ -75,8 +75,9 @@ window.onload = () => {
 	};
 
 	try {
-		imageBlob = FetchImageFromDatabase("album", "images");
-		const imageUrl = URL.createObjectURL(imageBlob);
+		imageRecord = await FetchImageFromDatabase("album", "images");
+		if (!imageRecord) return;
+		const imageUrl = URL.createObjectURL(imageRecord.image_blob);
 		sessionStorage.setItem('image_url', imageUrl);
 		const img = document.createElement("img");
 		img.src = imageUrl;
@@ -106,9 +107,11 @@ imagePathForm.addEventListener("submit", async function submitimage(e) {
 	submittedImageDiv.innerHTML = "";
 	submittedImageDiv.appendChild(img);
 
+
 	let openRequest = indexedDB.open("album", 1)
 
 	openRequest.onupgradeneeded = (event) => {
+		console.log('onupgradeneeded fired bitch')
 		let db = event.target.result;
 		if (!db.objectStoreNames.contains("images")) {
 			db.createObjectStore("images", {keyPath: "id"});
