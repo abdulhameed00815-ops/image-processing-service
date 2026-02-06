@@ -1,6 +1,6 @@
 import requests
 import io
-from fastapi import FastAPI, UploadFile, File, Request
+from fastapi import FastAPI, UploadFile, File, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, FileResponse
 from PIL import Image, ImageOps
@@ -38,19 +38,14 @@ async def operate_image(image_path: str, operation: str, request: Request):
 
 
 
-
-#this is just a dummy endpoint, i still need to figure out how to make a copy of the original image after cropping it, also need to rename it, but the main logic is ok.
 @fastapi.post("/crop/{crop_amount1}/{crop_amount2}/{crop_amount3}/{crop_amount4}")
-async def crop_image(crop_amount1: int, crop_amount2: int, crop_amount3: int, crop_amount4: int, image: UploadFile = File(...)):
+async def crop_image(request: Request, crop_amount1: int, crop_amount2: int, crop_amount3: int, crop_amount4: int, image: UploadFile = File(...)):
+    original_bytes = await image.read()
     im = Image.open(image.file)
-    image_size = im.size
-    image_width = image_size[0] 
-    image_height = image_size[1]
-    if crop_amount1 > image_width | crop_amount3 > image_width:
-        raise HTTPException(status_code=400, detail="too much crop")
-    elif crop_amount2 > image_height | crop_amount4 > image_height:
-        raise HTTPException(status_code=400, detail="too much crop")
-    cropped_image = ImageOps.crop(im, border=(crop_amount1, crop_amount2, crop_amount3, crop_amount4))
+    try:
+        cropped_image = ImageOps.crop(im, border=(crop_amount1, crop_amount2, crop_amount3, crop_amount4))
+    except ValueError:
+        return Response(content=original_bytes, media_type=image.content_type, headers={"detail": "too much crop"})
     #we use the code below to temporarily store the file in the ram (so that we can return it thro http) instead of storing it on the disc.
     buf = io.BytesIO()
     cropped_image.save(buf, format="JPEG")
